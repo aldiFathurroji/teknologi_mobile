@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+// ...
+
 import 'dart:async';
 import '../book.dart';
 import '../detail_buku_page.dart';
@@ -9,6 +12,7 @@ class HomePage extends StatefulWidget {
   final Set<String> favoriteIsbns;
   final Function(String) onToggleFavorite;
   final Function(Map<String, dynamic>) onCategoryTap;
+  final Function(Buku) onAddToCart;
   const HomePage({
     Key? key,
     required this.books,
@@ -16,6 +20,7 @@ class HomePage extends StatefulWidget {
     required this.favoriteIsbns,
     required this.onToggleFavorite,
     required this.onCategoryTap,
+    required this.onAddToCart,
   }) : super(key: key);
 
   @override
@@ -38,17 +43,20 @@ class _HomePageState extends State<HomePage> {
     promos.addAll([
       {
         'title': 'Promo Spesial! Diskon hingga 50%',
-        'desc': 'Beli buku "${widget.books[0].judul}" dengan harga spesial minggu ini!',
+        'desc':
+            'Beli buku "${widget.books[0].judul}" dengan harga spesial minggu ini!',
         'img': widget.books[0].gambar,
       },
       {
         'title': 'Flash Sale Buku Terlaris',
-        'desc': 'Dapatkan "${widget.books[1].judul}" dengan diskon 40% hanya hari ini!',
+        'desc':
+            'Dapatkan "${widget.books[1].judul}" dengan diskon 40% hanya hari ini!',
         'img': widget.books[1].gambar,
       },
       {
         'title': 'Buku Pilihan Editor',
-        'desc': 'Rekomendasi: "${widget.books[2].judul}" untuk inspirasi harian Anda.',
+        'desc':
+            'Rekomendasi: "${widget.books[2].judul}" untuk inspirasi harian Anda.',
         'img': widget.books[2].gambar,
       },
     ]);
@@ -77,29 +85,29 @@ class _HomePageState extends State<HomePage> {
     final filteredBooks =
         _searchQuery.isEmpty
             ? widget.books
-            : widget.books
-                .where(
-                  (b) =>
-                      b.judul.toLowerCase().contains(
-                        _searchQuery.toLowerCase(),
-                      ) ||
-                      b.penulis.toLowerCase().contains(
-                        _searchQuery.toLowerCase(),
-                      ),
-                )
-                .toList();
+            : widget.books.where((b) {
+              final query = _searchQuery.toLowerCase();
+              final kategoriList = b.kategori
+                  .toLowerCase()
+                  .split(',')
+                  .map((e) => e.trim());
+              return b.judul.toLowerCase().contains(query) ||
+                  b.penulis.toLowerCase().contains(query) ||
+                  b.penerbit.toLowerCase().contains(query) ||
+                  kategoriList.any((k) => k.contains(query));
+            }).toList();
     return CustomScrollView(
       slivers: [
-        // Search Bar
+        // Search Bar Fungsional
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
             child: Material(
               elevation: 2,
               borderRadius: BorderRadius.circular(8),
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: 'Cari buku... ',
+                  hintText: 'Cari buku, penulis, atau kategori',
                   prefixIcon: const Icon(Icons.search),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -172,11 +180,12 @@ class _HomePageState extends State<HomePage> {
                               child: Image.network(
                                 promo['img']!,
                                 fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) => const Icon(
-                                  Icons.broken_image,
-                                  size: 48,
-                                  color: Colors.deepPurple,
-                                ),
+                                errorBuilder:
+                                    (context, error, stackTrace) => const Icon(
+                                      Icons.broken_image,
+                                      size: 48,
+                                      color: Colors.deepPurple,
+                                    ),
                               ),
                             ),
                           ],
@@ -189,16 +198,22 @@ class _HomePageState extends State<HomePage> {
                       right: 0,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(promos.length, (i) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: _currentPromo == i ? 18 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _currentPromo == i ? Colors.deepPurple : Colors.deepPurple[200],
-                            borderRadius: BorderRadius.circular(6),
+                        children: List.generate(
+                          promos.length,
+                          (i) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: _currentPromo == i ? 18 : 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color:
+                                  _currentPromo == i
+                                      ? Colors.deepPurple
+                                      : Colors.deepPurple[200],
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                           ),
-                        )),
+                        ),
                       ),
                     ),
                   ],
@@ -226,10 +241,7 @@ class _HomePageState extends State<HomePage> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
-                            colors: [
-                              Colors.deepPurple,
-                              Colors.purpleAccent,
-                            ],
+                            colors: [Colors.deepPurple, Colors.purpleAccent],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -242,11 +254,7 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         padding: const EdgeInsets.all(16),
-                        child: Icon(
-                          cat['icon'],
-                          color: Colors.white,
-                          size: 36,
-                        ),
+                        child: Icon(cat['icon'], color: Colors.white, size: 36),
                       ),
                       const SizedBox(height: 8),
                       Expanded(
@@ -296,6 +304,7 @@ class _HomePageState extends State<HomePage> {
                               isFavorite: isFavorite,
                               onToggleFavorite:
                                   () => widget.onToggleFavorite(buku.isbn),
+                              onAddToCart: widget.onAddToCart,
                             ),
                       ),
                     );
@@ -312,6 +321,28 @@ class _HomePageState extends State<HomePage> {
                             width: 80,
                             height: 110,
                             fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                width: 80,
+                                height: 110,
+                                color: Colors.grey[200],
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                                null
+                                            ? loadingProgress
+                                                    .cumulativeBytesLoaded /
+                                                (loadingProgress
+                                                        .expectedTotalBytes ??
+                                                    1)
+                                            : null,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            },
                             errorBuilder:
                                 (c, e, s) => Container(
                                   width: 80,

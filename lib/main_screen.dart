@@ -16,6 +16,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final Set<String> _favoriteIsbns = {};
+  final List<Buku> _keranjang = [];
 
   final List<Map<String, dynamic>> dataBuku = [
     {
@@ -182,7 +183,7 @@ class _MainScreenState extends State<MainScreen> {
     },
     {
       "image":
-          "https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=400&q=80", // Pulang
+          "https://inc.mizanstore.com/aassets/img/com_cart/produk/pulang-tere-liye.jpg", // Pulang
       "title": "Pulang",
       "author": "Leila S. Chudori",
       "publisher": "KPG (Kepustakaan Populer Gramedia)",
@@ -207,7 +208,11 @@ class _MainScreenState extends State<MainScreen> {
     final Set<String> kategoriSet = {};
     for (final buku in daftarBuku) {
       final kategoriStr = buku.kategori;
-      final kategoriList = kategoriStr.split(',').map((e) => e.trim());
+      final kategoriList = kategoriStr
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toSet();
       kategoriSet.addAll(kategoriList);
     }
     final Map<String, Map<String, dynamic>> kategoriIconMap = {
@@ -264,7 +269,8 @@ class _MainScreenState extends State<MainScreen> {
         'image': 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
       },
     };
-    return kategoriSet.map((k) {
+    final List<String> kategoriSorted = kategoriSet.toList()..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return kategoriSorted.map((k) {
       final iconData =
           kategoriIconMap[k] ??
           {
@@ -278,6 +284,14 @@ class _MainScreenState extends State<MainScreen> {
         'image': iconData['image'],
       };
     }).toList();
+  }
+
+  void _tambahKeKeranjang(Buku buku) {
+    setState(() {
+      if (!_keranjang.any((b) => b.isbn == buku.isbn)) {
+        _keranjang.add(buku);
+      }
+    });
   }
 
   List<Widget> get _pages => [
@@ -301,19 +315,11 @@ class _MainScreenState extends State<MainScreen> {
             builder:
                 (_) => KategoriDetailPage(
                   category: cat,
-                  books:
-                      daftarBuku
-                          .where(
-                            (b) => b.kategori
-                                .split(',')
-                                .map((e) => e.trim())
-                                .contains(cat['key']),
-                          )
-                          .toList(),
                 ),
           ),
         );
       },
+      onAddToCart: _tambahKeKeranjang,
     ),
     KategoriPage(
       categories: kategoriList,
@@ -329,7 +335,14 @@ class _MainScreenState extends State<MainScreen> {
         });
       },
     ),
-    const UploadBarangPage(),
+    UploadBarangPage(
+      onAddBuku: (bukuBaru) {
+        setState(() {
+          dataBuku.add(bukuBaru);
+          daftarBuku.add(Buku.fromJson(bukuBaru));
+        });
+      },
+    ),
     const AkunPage(),
   ];
 
@@ -351,54 +364,88 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-          title:
-              _selectedIndex == 0
-                  ? Container(
-                    margin: const EdgeInsets.only(top: 12),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Cari buku, penulis, atau kategori',
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Colors.deepPurple,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 0,
-                          horizontal: 16,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 16),
-                      readOnly: true,
-                      onTap: () {},
+          title: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple[50],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(6),
+                child: const Icon(
+                  Icons.menu_book_rounded,
+                  color: Colors.deepPurple,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'ReadCyle',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  color: Colors.white,
+                  letterSpacing: 1.1,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black54,
+                      offset: Offset(0, 2),
+                      blurRadius: 6,
                     ),
-                  )
-                  : const Text(
-                    'ReadCyle',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.shopping_cart, size: 28),
               onPressed: () {
                 showDialog(
                   context: context,
-                  builder:
-                      (context) => AlertDialog(
-                        title: const Text('Keranjang Belanja'),
-                        content: const Text('Keranjang belanja kosong.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Tutup'),
+                  builder: (context) => AlertDialog(
+                    title: const Text('Keranjang Belanja'),
+                    content: _keranjang.isEmpty
+                        ? const Text('Keranjang belanja kosong.')
+                        : SizedBox(
+                            width: 300,
+                            child: ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: _keranjang.length,
+                              separatorBuilder: (_, __) => const Divider(),
+                              itemBuilder: (context, idx) {
+                                final buku = _keranjang[idx];
+                                return ListTile(
+                                  leading: SizedBox(
+                                    width: 40,
+                                    child: Image.network(
+                                      buku.gambar,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (c, e, s) => const Icon(Icons.broken_image),
+                                    ),
+                                  ),
+                                  title: Text(buku.judul, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  subtitle: Text('Rp${buku.harga}'),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () {
+                                      setState(() {
+                                        _keranjang.removeAt(idx);
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ],
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Tutup'),
                       ),
+                    ],
+                  ),
                 );
               },
               tooltip: 'Keranjang',

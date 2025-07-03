@@ -34,15 +34,6 @@ class KategoriPage extends StatelessWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 18),
               itemBuilder: (context, index) {
                 final cat = categories[index];
-                final filteredBooks =
-                    books
-                        .where(
-                          (b) => b.kategori
-                              .split(',')
-                              .map((e) => e.trim())
-                              .contains(cat['key']),
-                        )
-                        .toList();
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -51,7 +42,6 @@ class KategoriPage extends StatelessWidget {
                         builder:
                             (_) => KategoriDetailPage(
                               category: cat,
-                              books: filteredBooks,
                             ),
                       ),
                     );
@@ -125,7 +115,8 @@ class KategoriPage extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  '${filteredBooks.length} buku',
+                                  // filteredBooks tetap digunakan untuk label jumlah buku
+                                  '${books.where((b) => b.kategori.split(',').map((e) => e.trim()).contains(cat['key'])).length} buku',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     color: Colors.deepPurple,

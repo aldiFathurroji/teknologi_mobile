@@ -5,11 +5,13 @@ class DetailBukuPage extends StatelessWidget {
   final Buku book;
   final bool isFavorite;
   final VoidCallback? onToggleFavorite;
+  final Function(Buku)? onAddToCart;
   const DetailBukuPage({
     Key? key,
     required this.book,
     this.isFavorite = false,
     this.onToggleFavorite,
+    this.onAddToCart,
   }) : super(key: key);
 
   @override
@@ -135,41 +137,75 @@ class DetailBukuPage extends StatelessWidget {
             Text(book.penutup, style: const TextStyle(fontSize: 15)),
             const SizedBox(height: 24),
             Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.shopping_cart_checkout),
-                label: const Text('Beli Buku'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 14,
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder:
-                        (context) => AlertDialog(
-                          title: const Text('Pembelian Buku'),
-                          content: Text(
-                            'Terima kasih telah membeli buku "${book.judul}"!',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text('Tutup'),
+              child: Column(
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.shopping_cart_checkout),
+                    label: const Text('Beli Buku'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (context) => AlertDialog(
+                              title: const Text('Pembelian Buku'),
+                              content: Text(
+                                'Terima kasih telah membeli buku "${book.judul}"!',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Tutup'),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                  );
-                },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.add_shopping_cart),
+                    label: const Text('Masukkan ke Keranjang'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: onAddToCart != null
+                        ? () {
+                            onAddToCart!(book);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Buku dimasukkan ke keranjang!'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        : null,
+                  ),
+                ],
               ),
             ),
           ],

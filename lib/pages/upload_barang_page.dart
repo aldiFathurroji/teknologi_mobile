@@ -1,41 +1,61 @@
 import 'package:flutter/material.dart';
 
 class UploadBarangPage extends StatefulWidget {
-  const UploadBarangPage({Key? key}) : super(key: key);
+  final void Function(Map<String, dynamic>)? onAddBuku;
+  const UploadBarangPage({Key? key, this.onAddBuku}) : super(key: key);
 
   @override
   State<UploadBarangPage> createState() => _UploadBarangPageState();
 }
 
 class _UploadBarangPageState extends State<UploadBarangPage> {
-  final List<Map<String, dynamic>> _jualBuku = [];
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _judulController = TextEditingController();
   final TextEditingController _penulisController = TextEditingController();
   final TextEditingController _hargaController = TextEditingController();
   final TextEditingController _imageController = TextEditingController();
+  final TextEditingController _penerbitController = TextEditingController();
+  final TextEditingController _tahunController = TextEditingController();
+  final TextEditingController _isbnController = TextEditingController();
+  final TextEditingController _tipeController = TextEditingController();
+  final TextEditingController _kategoriController = TextEditingController();
+  final TextEditingController _pendahuluanController = TextEditingController();
+  final TextEditingController _isiController = TextEditingController();
+  final TextEditingController _penutupController = TextEditingController();
 
   void _addBuku() {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _jualBuku.add({
-          'judul': _judulController.text,
-          'penulis': _penulisController.text,
-          'harga': int.tryParse(_hargaController.text) ?? 0,
-          'image': _imageController.text,
-        });
-        _judulController.clear();
-        _penulisController.clear();
-        _hargaController.clear();
-        _imageController.clear();
-      });
+      final bukuBaru = {
+        'image': _imageController.text,
+        'title': _judulController.text,
+        'author': _penulisController.text,
+        'publisher': _penerbitController.text,
+        'year': int.tryParse(_tahunController.text) ?? 0,
+        'isbn': _isbnController.text,
+        'price': int.tryParse(_hargaController.text) ?? 0,
+        'type': _tipeController.text,
+        'kategori': _kategoriController.text,
+        'pendahuluan': _pendahuluanController.text,
+        'isi': _isiController.text,
+        'penutup': _penutupController.text,
+      };
+      widget.onAddBuku?.call(bukuBaru);
+      _judulController.clear();
+      _penulisController.clear();
+      _hargaController.clear();
+      _imageController.clear();
+      _penerbitController.clear();
+      _tahunController.clear();
+      _isbnController.clear();
+      _tipeController.clear();
+      _kategoriController.clear();
+      _pendahuluanController.clear();
+      _isiController.clear();
+      _penutupController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Buku berhasil ditambahkan!')),
+      );
     }
-  }
-
-  void _deleteBuku(int index) {
-    setState(() {
-      _jualBuku.removeAt(index);
-    });
   }
 
   @override
@@ -44,6 +64,14 @@ class _UploadBarangPageState extends State<UploadBarangPage> {
     _penulisController.dispose();
     _hargaController.dispose();
     _imageController.dispose();
+    _penerbitController.dispose();
+    _tahunController.dispose();
+    _isbnController.dispose();
+    _tipeController.dispose();
+    _kategoriController.dispose();
+    _pendahuluanController.dispose();
+    _isiController.dispose();
+    _penutupController.dispose();
     super.dispose();
   }
 
@@ -56,11 +84,10 @@ class _UploadBarangPageState extends State<UploadBarangPage> {
         children: [
           const SizedBox(height: 16),
           const Text(
-            'Jual Buku Anda',
+            'Tambah Buku Baru',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          // Form upload kekinian
           Card(
             elevation: 4,
             shape: RoundedRectangleBorder(
@@ -102,6 +129,49 @@ class _UploadBarangPageState extends State<UploadBarangPage> {
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
+                      controller: _penerbitController,
+                      decoration: const InputDecoration(
+                        labelText: 'Penerbit',
+                        prefixIcon: Icon(Icons.business),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'Penerbit wajib diisi'
+                                  : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _tahunController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Tahun',
+                        prefixIcon: Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'Tahun wajib diisi'
+                                  : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _isbnController,
+                      decoration: const InputDecoration(
+                        labelText: 'ISBN',
+                        prefixIcon: Icon(Icons.qr_code),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'ISBN wajib diisi'
+                                  : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
                       controller: _hargaController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
@@ -117,12 +187,85 @@ class _UploadBarangPageState extends State<UploadBarangPage> {
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
+                      controller: _tipeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Tipe (Baru/Bekas)',
+                        prefixIcon: Icon(Icons.check_circle),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'Tipe wajib diisi'
+                                  : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _kategoriController,
+                      decoration: const InputDecoration(
+                        labelText: 'Kategori (pisahkan dengan koma)',
+                        prefixIcon: Icon(Icons.category),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'Kategori wajib diisi'
+                                  : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
                       controller: _imageController,
                       decoration: const InputDecoration(
                         labelText: 'URL Gambar',
                         prefixIcon: Icon(Icons.image),
                         border: OutlineInputBorder(),
                       ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'URL gambar wajib diisi'
+                                  : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _pendahuluanController,
+                      decoration: const InputDecoration(
+                        labelText: 'Pendahuluan',
+                        prefixIcon: Icon(Icons.info_outline),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'Pendahuluan wajib diisi'
+                                  : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _isiController,
+                      decoration: const InputDecoration(
+                        labelText: 'Isi',
+                        prefixIcon: Icon(Icons.notes),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty ? 'Isi wajib diisi' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _penutupController,
+                      decoration: const InputDecoration(
+                        labelText: 'Penutup',
+                        prefixIcon: Icon(Icons.done_all),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator:
+                          (v) =>
+                              v == null || v.isEmpty
+                                  ? 'Penutup wajib diisi'
+                                  : null,
                     ),
                     const SizedBox(height: 18),
                     SizedBox(
@@ -149,75 +292,6 @@ class _UploadBarangPageState extends State<UploadBarangPage> {
               ),
             ),
           ),
-          // List buku yang dijual kekinian
-          if (_jualBuku.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Daftar Buku Dijual',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                const SizedBox(height: 10),
-                ..._jualBuku.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final buku = entry.value;
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 14),
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child:
-                            buku['image'] != null &&
-                                    buku['image'].toString().isNotEmpty
-                                ? Image.network(
-                                  buku['image'],
-                                  width: 50,
-                                  height: 70,
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (c, e, s) => Container(
-                                        width: 50,
-                                        height: 70,
-                                        color: Colors.grey[200],
-                                        child: const Icon(
-                                          Icons.broken_image,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                )
-                                : Container(
-                                  width: 50,
-                                  height: 70,
-                                  color: Colors.grey[200],
-                                  child: const Icon(
-                                    Icons.broken_image,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                      ),
-                      title: Text(
-                        buku['judul'],
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        'Penulis: ${buku['penulis']}\nRp${buku['harga']}',
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteBuku(i),
-                        tooltip: 'Hapus',
-                      ),
-                    ),
-                  );
-                }),
-              ],
-            ),
         ],
       ),
     );
