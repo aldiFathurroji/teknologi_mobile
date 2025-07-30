@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'book.dart';
+import 'pesanan.dart';
 
 class DetailBukuPage extends StatelessWidget {
   final Buku book;
@@ -156,23 +157,52 @@ class DetailBukuPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: () {
-                      showDialog(
+                    onPressed: () async {
+                      final result = await showModalBottomSheet<Map<String, String>>(
                         context: context,
-                        builder:
-                            (context) => AlertDialog(
-                              title: const Text('Pembelian Buku'),
-                              content: Text(
-                                'Terima kasih telah membeli buku "${book.judul}"!',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('Tutup'),
-                                ),
+                        isScrollControlled: true,
+                        builder: (_) => BeliBukuForm(book: book),
+                      );
+                      if (result != null) {
+                        // Tampilkan dialog konfirmasi
+                        final konfirmasi = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Konfirmasi Pesanan'),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Buku: ${book.judul}'),
+                                Text('Alamat: ${result['alamat']}'),
+                                Text('Metode: ${result['metode']}'),
                               ],
                             ),
-                      );
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: const Text('Batal'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
+                                child: const Text('Konfirmasi'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (konfirmasi == true) {
+                          tambahPesanan(Pesanan(
+                            judulBuku: book.judul,
+                            alamat: result['alamat']!,
+                            metode: result['metode']!,
+                            waktu: DateTime.now(),
+                          ));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Pesanan berhasil dibuat!')),
+                          );
+                        }
+                      }
                     },
                   ),
                   const SizedBox(height: 12),
@@ -193,19 +223,113 @@ class DetailBukuPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: onAddToCart != null
-                        ? () {
-                            onAddToCart!(book);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Buku dimasukkan ke keranjang!'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        : null,
+                    onPressed:
+                        onAddToCart != null
+                            ? () {
+                              onAddToCart!(book);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Buku dimasukkan ke keranjang!',
+                                  ),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                            : null,
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BeliBukuForm extends StatefulWidget {
+  final dynamic book;
+  const BeliBukuForm({required this.book, Key? key}) : super(key: key);
+
+  @override
+  State<BeliBukuForm> createState() => _BeliBukuFormState();
+}
+
+class _BeliBukuFormState extends State<BeliBukuForm> {
+  final _alamatController = TextEditingController();
+  String _metode = 'Transfer Bank';
+  @override
+  void dispose() {
+    _alamatController.dispose();
+    super.dispose();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24, right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Alamat Pengiriman', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _alamatController,
+              decoration: InputDecoration(
+                hintText: 'Masukkan alamat lengkap',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              minLines: 2,
+              maxLines: 3,
+            ),
+            const SizedBox(height: 18),
+            Text('Metode Pembayaran', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            RadioListTile<String>(
+              value: 'Transfer Bank',
+              groupValue: _metode,
+              onChanged: (v) => setState(() => _metode = v!),
+              title: Text('Transfer Bank'),
+            ),
+            RadioListTile<String>(
+              value: 'E-Wallet',
+              groupValue: _metode,
+              onChanged: (v) => setState(() => _metode = v!),
+              title: Text('E-Wallet'),
+            ),
+            RadioListTile<String>(
+              value: 'COD',
+              groupValue: _metode,
+              onChanged: (v) => setState(() => _metode = v!),
+              title: Text('COD (Bayar di Tempat)'),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Lanjut Konfirmasi', style: TextStyle(fontSize: 16)),
+                onPressed: () {
+                  if (_alamatController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Alamat tidak boleh kosong!')),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).pop({
+                    'alamat': _alamatController.text.trim(),
+                    'metode': _metode,
+                  });
+                },
               ),
             ),
           ],

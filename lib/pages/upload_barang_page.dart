@@ -26,14 +26,14 @@ class _UploadBarangPageState extends State<UploadBarangPage> {
   void _addBuku() {
     if (_formKey.currentState!.validate()) {
       final bukuBaru = {
-        'image': _imageController.text,
-        'title': _judulController.text,
-        'author': _penulisController.text,
-        'publisher': _penerbitController.text,
-        'year': int.tryParse(_tahunController.text) ?? 0,
+        'gambar': _imageController.text,
+        'judul': _judulController.text,
+        'penulis': _penulisController.text,
+        'penerbit': _penerbitController.text,
+        'tahun': int.tryParse(_tahunController.text) ?? 0,
         'isbn': _isbnController.text,
-        'price': int.tryParse(_hargaController.text) ?? 0,
-        'type': _tipeController.text,
+        'harga': int.tryParse(_hargaController.text) ?? 0,
+        'tipe': _tipeController.text,
         'kategori': _kategoriController.text,
         'pendahuluan': _pendahuluanController.text,
         'isi': _isiController.text,

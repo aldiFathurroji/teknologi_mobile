@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'book.dart';
 import 'detail_buku_page.dart';
 import 'api_service.dart';
+import 'dart:developer';
 
 class KategoriDetailPage extends StatefulWidget {
   final Map<String, dynamic> category;
-  const KategoriDetailPage({
-    Key? key,
-    required this.category,
-  }) : super(key: key);
+  const KategoriDetailPage({Key? key, required this.category})
+    : super(key: key);
 
   @override
   State<KategoriDetailPage> createState() => _KategoriDetailPageState();
@@ -20,7 +19,8 @@ class _KategoriDetailPageState extends State<KategoriDetailPage> {
   @override
   void initState() {
     super.initState();
-    _booksFuture = ApiService.fetchBooksByCategory(widget.category['label']);
+    log('Kategori yang dikirim ke detail: ${widget.category}');
+    _booksFuture = ApiService.fetchBooksByCategory(widget.category['key']);
   }
 
   @override
@@ -37,6 +37,7 @@ class _KategoriDetailPageState extends State<KategoriDetailPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
+            log('Error snapshot: ${snapshot.error}');
             return Center(child: Text('Gagal memuat data'));
           }
           final books = snapshot.data ?? [];
@@ -48,16 +49,19 @@ class _KategoriDetailPageState extends State<KategoriDetailPage> {
             itemCount: books.length,
             itemBuilder: (context, idx) {
               final buku = books[idx];
+              log('Menampilkan buku: \\${buku.judul}');
+              log('URL gambar buku: \\${buku.gambar}');
               final isFavorite = false; // Favorit logic bisa diimprove
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => DetailBukuPage(
-                        book: buku,
-                        isFavorite: isFavorite,
-                      ),
+                      builder:
+                          (_) => DetailBukuPage(
+                            book: buku,
+                            isFavorite: isFavorite,
+                          ),
                     ),
                   );
                 },
@@ -74,22 +78,25 @@ class _KategoriDetailPageState extends State<KategoriDetailPage> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            buku.gambar,
-                            height: 120,
-                            width: 90,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              height: 120,
-                              width: 90,
-                              color: Colors.grey[200],
-                              child: const Icon(
-                                Icons.broken_image,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
+                          child: (buku.gambar.isNotEmpty)
+                              ? Image.network(
+                                  buku.gambar,
+                                  width: 60,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                                    'assets/images/default_book.jpg',
+                                    width: 60,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Image.asset(
+                                  'assets/images/default_book.jpg',
+                                  width: 60,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
                         ),
                         Expanded(
                           child: Column(
@@ -119,25 +126,28 @@ class _KategoriDetailPageState extends State<KategoriDetailPage> {
                               Wrap(
                                 spacing: 6,
                                 runSpacing: 2,
-                                children: buku.kategori
-                                    .split(',')
-                                    .map(
-                                      (k) => Chip(
-                                        label: Text(
-                                          k.trim(),
-                                          style: const TextStyle(
-                                            fontSize: 12,
+                                children:
+                                    buku.kategori
+                                        .split(',')
+                                        .map(
+                                          (k) => Chip(
+                                            label: Text(
+                                              k.trim(),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            backgroundColor:
+                                                Colors.deepPurple[50],
+                                            labelStyle: const TextStyle(
+                                              color: Colors.deepPurple,
+                                            ),
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            padding: EdgeInsets.zero,
                                           ),
-                                        ),
-                                        backgroundColor: Colors.deepPurple[50],
-                                        labelStyle: const TextStyle(
-                                          color: Colors.deepPurple,
-                                        ),
-                                        visualDensity: VisualDensity.compact,
-                                        padding: EdgeInsets.zero,
-                                      ),
-                                    )
-                                    .toList(),
+                                        )
+                                        .toList(),
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -175,9 +185,10 @@ class _KategoriDetailPageState extends State<KategoriDetailPage> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: buku.tipe == 'Baru'
-                                      ? Colors.green[600]
-                                      : Colors.orange[600],
+                                  color:
+                                      buku.tipe == 'Baru'
+                                          ? Colors.green[600]
+                                          : Colors.orange[600],
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(

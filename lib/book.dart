@@ -29,24 +29,22 @@ class Buku {
 
   factory Buku.fromJson(Map<String, dynamic> json) {
     return Buku(
-      gambar: json['image'] as String,
-      judul: json['title'] as String,
-      penulis: json['author'] as String,
-      penerbit: json['publisher'] as String,
-      tahun:
-          json['year'] is int
-              ? json['year'] as int
-              : int.parse(json['year'].toString()),
-      isbn: json['isbn'] as String,
-      harga:
-          json['price'] is int
-              ? json['price'] as int
-              : int.parse(json['price'].toString()),
-      tipe: json['type'] as String,
-      kategori: json['kategori'] as String,
-      pendahuluan: json['pendahuluan'] as String,
-      isi: json['isi'] as String,
-      penutup: json['penutup'] as String,
+      gambar: json['gambar'] as String? ?? '',
+      judul: json['judul'] as String? ?? '',
+      penulis: json['penulis'] as String? ?? '',
+      penerbit: json['penerbit'] as String? ?? '',
+      tahun: (json['tahun'] is int)
+          ? json['tahun'] as int
+          : int.tryParse(json['tahun']?.toString() ?? '') ?? 0,
+      isbn: json['isbn'] as String? ?? '',
+      harga: (json['harga'] is int)
+          ? json['harga'] as int
+          : int.tryParse(json['harga']?.toString() ?? '') ?? 0,
+      tipe: json['tipe'] as String? ?? '',
+      kategori: json['kategori'] as String? ?? '',
+      pendahuluan: json['pendahuluan'] as String? ?? '',
+      isi: json['isi'] as String? ?? '',
+      penutup: json['penutup'] as String? ?? '',
     );
   }
 }

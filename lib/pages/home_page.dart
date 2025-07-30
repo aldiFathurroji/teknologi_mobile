@@ -13,6 +13,7 @@ class HomePage extends StatefulWidget {
   final Function(String) onToggleFavorite;
   final Function(Map<String, dynamic>) onCategoryTap;
   final Function(Buku) onAddToCart;
+  final Function(Buku) onDeleteBuku;
   const HomePage({
     Key? key,
     required this.books,
@@ -21,6 +22,7 @@ class HomePage extends StatefulWidget {
     required this.onToggleFavorite,
     required this.onCategoryTap,
     required this.onAddToCart,
+    required this.onDeleteBuku,
   }) : super(key: key);
 
   @override
@@ -39,29 +41,41 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _promoController = PageController();
-    // Ambil 3 buku pertama untuk promo
-    promos.addAll([
-      {
-        'title': 'Promo Spesial! Diskon hingga 50%',
-        'desc':
-            'Beli buku "${widget.books[0].judul}" dengan harga spesial minggu ini!',
-        'img': widget.books[0].gambar,
-      },
-      {
-        'title': 'Flash Sale Buku Terlaris',
-        'desc':
-            'Dapatkan "${widget.books[1].judul}" dengan diskon 40% hanya hari ini!',
-        'img': widget.books[1].gambar,
-      },
-      {
-        'title': 'Buku Pilihan Editor',
-        'desc':
-            'Rekomendasi: "${widget.books[2].judul}" untuk inspirasi harian Anda.',
-        'img': widget.books[2].gambar,
-      },
-    ]);
+    if (widget.books.length >= 3) {
+      promos.addAll([
+        {
+          'title': 'Promo Spesial! Diskon hingga 50%',
+          'desc': 'Beli buku "${widget.books[0].judul}" dengan harga spesial minggu ini!',
+          'img': widget.books[0].gambar,
+        },
+        {
+          'title': 'Flash Sale Buku Terlaris',
+          'desc': 'Dapatkan "${widget.books[1].judul}" dengan diskon 40% hanya hari ini!',
+          'img': widget.books[1].gambar,
+        },
+        {
+          'title': 'Buku Pilihan Editor',
+          'desc': 'Rekomendasi: "${widget.books[2].judul}" untuk inspirasi harian Anda.',
+          'img': widget.books[2].gambar,
+        },
+      ]);
+    } else if (widget.books.isNotEmpty) {
+      for (var i = 0; i < widget.books.length; i++) {
+        promos.add({
+          'title': 'Promo Buku',
+          'desc': 'Beli buku "${widget.books[i].judul}" dengan harga spesial!',
+          'img': widget.books[i].gambar,
+        });
+      }
+    } else {
+      promos.add({
+        'title': 'Belum ada buku',
+        'desc': 'Silakan tambahkan buku terlebih dahulu.',
+        'img': '', // atau gambar default
+      });
+    }
     _promoTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_promoController.hasClients) {
+      if (_promoController.hasClients && promos.isNotEmpty) {
         int next = (_currentPromo + 1) % promos.length;
         _promoController.animateToPage(
           next,
@@ -456,6 +470,14 @@ class _HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
+                                  ),
+                                  const Spacer(),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    tooltip: 'Hapus Buku',
+                                    onPressed: () {
+                                      widget.onDeleteBuku(buku);
+                                    },
                                   ),
                                 ],
                               ),

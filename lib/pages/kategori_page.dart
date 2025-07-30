@@ -39,10 +39,7 @@ class KategoriPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder:
-                            (_) => KategoriDetailPage(
-                              category: cat,
-                            ),
+                        builder: (_) => KategoriDetailPage(category: cat),
                       ),
                     );
                   },
